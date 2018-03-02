@@ -346,15 +346,16 @@ function buildCdnAngularCombined(dirname, cssDir) {
   var s = babelCore.buildExternalHelpers(angularBabelHelpers, 'global');
 
   return makeTask('build-cdn-angular-combined: ' + dirname, function() {
-    return gulp.src('./build-targets/cdn-angular-combined.js')
-      .pipe(plugins.browserify({
+    return browserifyStream(
+      './build-targets/cdn-angular-combined.js',
+      {
+        paths: [cssDir],
+        external: ['angular'],
         transform: [
           babelify.configure({plugins: ['external-helpers']}),
           stringify(['.css'])
-        ],
-        paths: ['./', './node_modules/', cssDir],
-        external: ['angular']
-      }))
+        ]
+      })
       .pipe(plugins.replace("require('angular')", "window.angular"))
       .pipe(plugins.injectString.prepend(s))
       .pipe(plugins.ngAnnotate())
@@ -375,11 +376,12 @@ function buildCdnAngularCombined(dirname, cssDir) {
 function buildE2eTests() {
   var s = babelCore.buildExternalHelpers(reactBabelHelpers, 'global');
 
-  return gulp.src('./build-targets/e2e-tests.js')
-    .pipe(plugins.browserify({
+  return browserifyStream(
+    './build-targets/e2e-tests.js',
+    {
+      extensions: ['.jsx'],
       transform: [babelify.configure({plugins: ['external-helpers']})],
-      extensions: ['.jsx']
-    }))
+    })
     .pipe(plugins.injectString.prepend(s))
     .pipe(plugins.rename('tests.js'))
     .pipe(gulp.dest('./e2e-tests'));
